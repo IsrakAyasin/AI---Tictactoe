@@ -13,9 +13,6 @@ def initial_state():
     """
     Returns starting state of the board.
     """
-    # return [[X, X, O],
-    #         [X, O, X],
-    #         [O, O, EMPTY]]
     return [[EMPTY, EMPTY, EMPTY],
             [EMPTY, EMPTY, EMPTY],
             [EMPTY, EMPTY, EMPTY]]
@@ -35,7 +32,6 @@ def player(board):
         return X
     else:
         return O
-# print(player(board))
 
 def actions(board):
     """
@@ -43,7 +39,6 @@ def actions(board):
     """
     all_actions = set()
     row_number = 0
-    print(board)
     for row in board:
         tile_number = 0
         for tile in row:
@@ -53,7 +48,6 @@ def actions(board):
         row_number += 1
     
     return all_actions
-# print(actions(board))
 
 def result(board, action):
     """
@@ -79,7 +73,6 @@ def winner(board):
     """
     Returns the winner of the game, if there is one.
     """
-    total = 0
     row_number = 0
     tile_number = 0
     possible_wins = initial_state()
@@ -87,17 +80,11 @@ def winner(board):
     # replace possible_wins with the board columns
     for row in board:
         for tile in row:
-            if tile != EMPTY:
-                total += 1
             possible_wins[tile_number][row_number] = tile
             tile_number += 1
         tile_number = 0
         row_number += 1
 
-    # if all the tiles filled up return true
-    if total == 9:
-        return None
-    
     # add the rows and the diagonals values
     possible_wins.extend(board)
     possible_wins.append([board[0][0],board[1][1],board[2][2]])
@@ -128,10 +115,12 @@ def terminal(board):
     """
     Returns True if game is over, False otherwise.
     """
-    if winner(board) == None:
-        return False
-    else:
+    if (winner(board) == X) or (winner(board) == O):
         return True
+    elif (len(actions(board)) == 0):
+        return True
+    else:
+        return False
 # print(terminal(board))
 
 
@@ -148,20 +137,53 @@ def utility(board):
         return 0
 # print(utility(board))
 
-# def max_value(board):
-
-
-# def min_value(board):
+def max_value(board):
+    if terminal(board) == True:
+        return utility(board)
     
+    v = -math.inf
 
-# def minimax(board):
-#     """
-#     Returns the optimal action for the current player on the board.
-#     """
-#     if terminal(board) == True:
-#         return None
-#     player_turn =  player(board)
-#     for action in actions(board):
-#         next_board = result(board, action)
-#         if terminal(next_board):
+    for action in actions(board):
+        v = max(v, min_value(result(board, action)))
 
+    return v
+
+
+def min_value(board):
+    if terminal(board) == True:
+        return utility(board)
+    
+    v = math.inf
+
+    for action in actions(board):
+        v = min(v, max_value(result(board, action)))
+
+    return v
+   
+
+def minimax(board):
+    """
+    Returns the optimal action for the current player on the board.
+    """
+    # check if the board is already in terminal state
+    if terminal(board) == True:
+        return None
+    
+    player_turn =  player(board)
+    best_turn = tuple()
+    if player_turn == X:
+        v = -math.inf
+        for action in actions(board):
+            new_v = min_value(result(board, action))
+            if new_v > v:
+                v = new_v
+                best_turn = action
+    else:
+        v = math.inf
+        for action in actions(board):
+            new_v = max_value(result(board, action))
+            if new_v < v:
+                v = new_v
+                best_turn = action
+
+    return best_turn
